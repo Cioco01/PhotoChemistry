@@ -52,7 +52,7 @@ public class Model {
 
     private MappedByteBuffer loadModelFile(AssetManager assetManager, String modelPath) throws IOException {
         java.io.FileDescriptor fileDescriptor = assetManager.openFd(modelPath).getFileDescriptor();
-        FileInputStream inputStream = new   qqqqFileInputStream(fileDescriptor);
+        FileInputStream inputStream = new FileInputStream(fileDescriptor);
         FileChannel fileChannel = inputStream.getChannel();
         long startOffset = assetManager.openFd(modelPath).getStartOffset();
         long declaredLength = assetManager.openFd(modelPath).getDeclaredLength();
