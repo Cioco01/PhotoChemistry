@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="335dp"
+        android:layout_height="60dp"
+        android:fontFamily="@font/akaya_kanadaka"
+        android:text="Bilancia la reazione"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="#673AB7"
+        android:textSize="34sp"
+        android:textStyle="bold|italic"
+        app:layout_constraintBottom_toTopOf="@+id/reactionText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.355"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.875" />
+
+    <EditText
+        android:id="@+id/reactionText"
+        android:layout_width="309dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="72dp"
+        android:ems="10"
+        android:fontFamily="@font/akaya_kanadaka"
+        android:hint="@string/inserisci_qui_la_tua_reazione"
+        android:inputType="text"
+        app:layout_constraintBottom_toTopOf="@+id/resultText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.029"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/risolviButton"
+        android:layout_width="143dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/akaya_kanadaka"
+        android:text="@string/bilancia"
+        app:layout_constraintBottom_toTopOf="@+id/resultText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.085"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/reactionText" />
+
+    <TextView
+        android:id="@+id/resultText"
+        android:layout_width="365dp"
+        android:layout_height="145dp"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/resultImageView"
+        tools:layout_editor_absoluteX="23dp" />
+
+    <ImageButton
+        android:id="@+id/captureButton"
+        android:layout_width="107dp"
+        android:layout_height="112dp"
+        android:background="#00FFFFFF"
+        android:contentDescription="@string/capturebutton"
+        app:layout_constraintBottom_toBottomOf="@+id/importButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/importButton"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@drawable/capture"
+        app:tint="#673AB7" />
+
+    <ImageButton
+        android:id="@+id/menuButton"
+        android:layout_width="114dp"
+        android:layout_height="111dp"
+        android:background="#00FFFFFF"
+        android:contentDescription="@string/settingsbutton"
+        app:layout_constraintBottom_toBottomOf="@+id/captureButton"
+        app:layout_constraintEnd_toStartOf="@+id/captureButton"
+        app:layout_constraintHorizontal_bias="0.71"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/captureButton"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@drawable/_31536_button_512x512"
+        app:tint="#673AB7" />
+
+    <ImageButton
+        android:id="@+id/importButton"
+        android:layout_width="110dp"
+        android:layout_height="111dp"
+        android:background="#00FFFFFF"
+        android:contentDescription="@string/importbutton"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.333"
+        app:layout_constraintStart_toEndOf="@+id/captureButton"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.955"
+        app:srcCompat="@drawable/image"
+        app:tint="#673AB7" />
+
+    <ImageView
+        android:id="@+id/resultImageView"
+        android:layout_width="356dp"
+        android:layout_height="144dp"
+        app:layout_constraintBottom_toTopOf="@+id/captureButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.49"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.953"
+        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+
+    <ImageButton
+        android:id="@+id/voiceButton"
+        android:layout_width="62dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="16dp"
+        android:background="#00FFFFFF"
+        android:contentDescription="@string/voicebutton"
+        app:layout_constraintBottom_toBottomOf="@+id/reactionText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/reactionText"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@drawable/voice"
+        app:tint="#673AB7" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
