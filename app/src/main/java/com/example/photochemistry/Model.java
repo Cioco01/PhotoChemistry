@@ -4,9 +4,12 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
 
+
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -25,11 +28,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
+
 public class Model {
 
     private List<Mat> images;
     private Context context;
     private Interpreter tflite; // Interpreter di TensorFlow Lite
+
     private String modelPath = "converted_model_v12.tflite"; // Nome del tuo file .tflite
     private String[] dic = {"(", ")", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "b", "C", "d", "e", "f", "G", "H", "i", "j", "k", "l", "M", "N", "o", "p", "plus", "q", "R", "rightarrow", "S", "T", "u", "v", "w", "X", "y", "z"};
 
@@ -39,6 +44,7 @@ public class Model {
         Arrays.sort(dic);
         // Inizializza l'Interpreter di TensorFlow Lite
         tflite = getTfliteInterpreter(modelPath);
+
     }
 
     private Interpreter getTfliteInterpreter(String modelPath) throws IOException {
@@ -71,50 +77,15 @@ public class Model {
         img.convertTo(img, CvType.CV_32S);
         int[] rgba = new int[(int) (img.total() * img.channels())];
         img.get(0, 0, rgba);
-/*
-        float[][] inputArray = new float[1][45 * 45];
-        int index = 0;
-        for (int value : rgba) {
-            inputArray[0][index++] = value / 255.0f;
-        }
+        TensorBuffer input = TensorBuffer.createFixedSize(new int[]{1, 45, 45, 1}, DataType.FLOAT32);
+        TensorBuffer output = TensorBuffer.createFixedSize(new int[]{1, 40}, DataType.FLOAT32);
+        input.loadArray(rgba, new int[]{1, 45, 45, 1});
 
-        float[][][][] reshapedInput = new float[1][height][width][channels];
-        int index2 = 0;
-        for (int j = 0; j < width; j++) {
-            for (int i = 0; i < height; i++) {
-                for (int k = 0; k < channels; k++) {
-                    reshapedInput[0][i][j][k] = inputArray[0][index2++];
-                }
-            }
-        }
-        */
+        tflite.run(input.getBuffer(), output.getBuffer());
+        float[] results = output.getFloatArray();
 
-        float[][][][] reshapedInput = new float[1][height][width][channels];
-        int index = 0;
-
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                for (int k = 0; k < channels; k++) {
-                    // Calculate the index into rgba (assuming row-major order)
-                    int rgbaIndex = i * width + j;
-                    if (rgbaIndex < rgba.length){
-                        reshapedInput[0][i][j][k] = rgba[rgbaIndex] / 255.0f; // Normalize directly
-                    }
-                }
-            }
-        }
-
-        // Assicurati che il modello sia stato caricato
-        if (tflite == null) {
-            return null;
-        }
-        // Assicurati che l'input abbia la forma corretta per il tuo modello
-        float[][] output = new float[1][40];
-
-        tflite.run(reshapedInput, output);
-
-        for (int i = 0; i < output[0].length; i++)
-            r.put(dic[i], output[0][i]);
+        for(int i=0;i<results.length; i++)
+            r.put(dic[i], results[i]);
 
         r = sortByValue(r);
 
