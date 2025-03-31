@@ -3,28 +3,23 @@ package com.example.photochemistry;
 
 import static android.content.ContentValues.TAG;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Camera;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,24 +33,34 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 import org.opencv.android.OpenCVLoader;
-import org.opencv.android.Utils;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int RECORDER_SAMPLERATE = 16000; //must be 16k for the model
+    private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
+    private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+    private AudioRecord recorder = null;
+    private Thread recordingThread = null;
+    private File outputFile = null;
 
     private static final int REQUEST_IMAGE_CAPTURE = 1888;
     private static final int REQUEST_IMAGE_IMPORT = 103;
     private ImageView resultImageView;
     private EditText textView;
-    private TextView resultView;
+    private TextView resultView, textView2;
     private ImageButton menuButton;
     private ImageButton importButton;
     private  ImageButton captureButton;
@@ -69,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] notSupported = {"",""};
     private static final String check = "+-=";
     private MediaRecorder mediaRecorder;
-    private File audioFile;
     private boolean isRecording = false;
 
     private Context mycontext;
@@ -87,11 +91,20 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        //create temp file for recording
+        try{
+            outputFile = File.createTempFile("voice16kmono", ".pcm", getApplicationContext().getFilesDir());
+            outputFile.deleteOnExit();
+        }catch(IOException e){
+            Log.e("TEMPFILE", e.toString());
+        }
+
         this.mycontext = this;
 
         setContentView(R.layout.activity_main);
 
         textView = (EditText) findViewById(R.id.reactionText);
+        textView2 = (TextView) findViewById(R.id.recordingText);
         resultView = (TextView) findViewById(R.id.resultText);
 
         captureButton = (ImageButton) findViewById(R.id.captureButton);
@@ -247,26 +260,61 @@ public class MainActivity extends AppCompatActivity {
         } else {
             startRecording();
         }
-        isRecording = !isRecording;
+
     }
 
     private void startRecording() {
-        mediaRecorder = new MediaRecorder();
-        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mediaRecorder.setOutputFile(getOutputFilePath());
-        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
 
-        try {
-            mediaRecorder.prepare();
-            mediaRecorder.start();
-            Toast.makeText(this,"Recording",Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
+        //Toast.makeText(this,"Recording",Toast.LENGTH_SHORT).show(); creates exception
+
+        int minBufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLERATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING);
+
+        recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, RECORDER_SAMPLERATE,
+                RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING, minBufferSize);
+        recorder.startRecording();
+        isRecording = true;
+        recordingThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                writeAudioDataToFile();
+            }
+        }, "audiorecorder thread");
+        recordingThread.start();
+    }
+
+    private void writeAudioDataToFile() {
+        // Write the output audio in byte
+
+        int bufferElements2Rec = 1024;
+        byte[] bData = new byte[bufferElements2Rec];
+        FileOutputStream os = null;
+
+        try{
+            os = new FileOutputStream(outputFile);
+        }catch(FileNotFoundException e){
+            Log.e("ERRSCRITTURA", e.toString());
+        }
+
+        while(isRecording){
+            // gets the voice output from mic to byte format
+            recorder.read(bData, 0, bufferElements2Rec);
+            try{
+                os.write(bData, 0, bufferElements2Rec);
+            }catch(IOException e){
+                Log.e("ERRSCRITTURAAUDIO", e.toString());
+            }
+        }
+
+        try{
+            os.close();
+        }catch (IOException e){
             e.printStackTrace();
-            Toast.makeText(this, "Error while recording",Toast.LENGTH_SHORT).show();
-            stopRecording();
         }
     }
+
     private String getOutputFilePath() {
         //File directory = new File(getExternalFilesDir(Environment.DIRECTORY_MUSIC), "AudioRecordings");
         File directory = getCacheDir();
@@ -279,14 +327,52 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void stopRecording() {
-        if (mediaRecorder != null) {
-            mediaRecorder.stop();
-            mediaRecorder.release();
-            mediaRecorder = null;
-            Toast.makeText(this, "Recording stopped", Toast.LENGTH_SHORT).show();
-            File audioFile = new File(getOutputFilePath());
-            processAudioFile(audioFile);
+        if (recorder != null) {
+            isRecording = false;
+            recorder.stop();
+            recorder.release();
+            recorder = null;
+            recordingThread = null;
+            //Toast.makeText(this, "Recording stopped", Toast.LENGTH_SHORT).show();
+
+            List<Float> myAudio = readAudioAndConvertToFloat();
+
+            try{
+                AudioModel mymodel = new AudioModel(getApplicationContext());
+                String res = mymodel.getTranscription(myAudio);
+                textView.setText(res);
+            }catch(IOException e){
+                throw new RuntimeException(e);
+            }
+
         }
+    }
+
+    private List<Float> readAudioAndConvertToFloat(){
+        FileInputStream fis = null;
+
+        try{
+            fis = new FileInputStream(outputFile);
+        }catch(FileNotFoundException e){
+            e.printStackTrace();
+        }
+
+        byte[] data = new byte[2]; //16bit is 1 sample
+        List<Float> samples_float = new ArrayList<>();
+
+        try {
+            while(fis.read(data) != -1){
+                int low = data[0] & 0xFF;
+                int high = data[1] << 8;
+                short sample = (short) (high | low);
+
+                samples_float.add(sample/32768.0f);
+            }
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+
+        return samples_float;
     }
 
     @Override
@@ -377,6 +463,28 @@ public class MainActivity extends AppCompatActivity {
 
         return res;
     }
+
+    public static String assetFilePath(Context context, String assetName){
+        File file = new File(context.getFilesDir(), assetName);
+        if(file.exists() && file.length() > 0)
+            return file.getAbsolutePath();
+
+        try (InputStream is = context.getAssets().open(assetName)){
+            try (OutputStream os = new FileOutputStream(file)){
+                byte[] buffer = new byte[4 * 1024];
+                int read;
+                while((read=is.read(buffer)) != -1)
+                    os.write(buffer, 0, read);
+                os.flush();
+
+            } return file.getAbsolutePath();
+
+        }catch(IOException e){
+            Log.e("errorFileAudioModel", "impossibile processare il file");
+        }
+        return null;
+    }
+
 
 }
 

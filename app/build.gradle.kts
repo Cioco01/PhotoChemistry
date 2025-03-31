@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.Packaging
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -33,13 +35,26 @@ android {
         viewBinding = true
         mlModelBinding = true
     }
+
+
+
+    packaging {
+        jniLibs.pickFirsts.add("lib/x86/libc++_shared.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libc++_shared.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libc++_shared.so")
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libc++_shared.so")
+
+    }
+
+
 }
 
 dependencies {
 
     implementation(files("libs/SSC4.1.0r1.jar"))
     implementation("org.tensorflow:tensorflow-lite:2.9.0")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation(libs.tensorflow.lite.support)
+    implementation(libs.pytorch.android.lite)
     implementation(project(":openCV"))
     implementation(libs.appcompat)
     implementation(libs.material)
@@ -52,4 +67,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
 }

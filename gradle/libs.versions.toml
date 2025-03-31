@@ -11,6 +11,8 @@ lifecycleViewmodelKtx = "2.6.1"
 navigationFragment = "2.6.0"
 navigationUi = "2.6.0"
 tensorflowLiteMetadata = "0.1.0"
+tensorflowLiteSupport = "0.4.4"
+pytorch_android_lite = "2.1.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -24,6 +26,8 @@ lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-view
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationFragment" }
 navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }
 tensorflow-lite-metadata = { group = "org.tensorflow", name = "tensorflow-lite-metadata", version.ref = "tensorflowLiteMetadata" }
+tensorflow-lite-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflowLiteSupport" }
+pytorch-android-lite = { module = "org.pytorch:pytorch_android_lite", version.ref = "pytorch_android_lite"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
