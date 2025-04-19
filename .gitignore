@@ -13,6 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+/app/src/main/assets/wav2vec2_quantized_lite.ptl
 
 # Project exclude paths
 /openCV/build/

@@ -340,7 +340,10 @@ public class MainActivity extends AppCompatActivity {
             try{
                 AudioModel mymodel = new AudioModel(getApplicationContext());
                 String res = mymodel.getTranscription(myAudio);
-                textView.setText(res);
+
+                AudioImprover ai = new AudioImprover(res, getApplicationContext());
+
+                textView.setText(ai.improve());
             }catch(IOException e){
                 throw new RuntimeException(e);
             }
